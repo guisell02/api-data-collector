@@ -1,0 +1,22 @@
+[project]
+name = "api-data-collector"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "guisell02", email = "guisellu886@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "black>=25.12.0",
+    "pytest>=9.0.2",
+    "requests>=2.32.5",
+    "ruff>=0.14.9",
+]
+
+[project.scripts]
+api-data-collector = "api_data_collector:main"
+
+[build-system]
+requires = ["uv_build>=0.9.17,<0.10.0"]
+build-backend = "uv_build"
