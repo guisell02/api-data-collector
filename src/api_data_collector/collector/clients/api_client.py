@@ -1,4 +1,5 @@
 import requests
+from urllib.parse import urljoin
 
 
 class ApiClient:
@@ -8,8 +9,12 @@ class ApiClient:
         self.base_url = base_url
         self.timeout = timeout
 
-    def get(self, endpoint: str) -> requests.Response:
+    def get_json(self, endpoint: str) -> dict:
         """Perform a GET request to the given endpoint."""
-        url = f"{self.base_url}{endpoint}"
+        url = urljoin(self.base_url, endpoint)
         response = requests.get(url, timeout=self.timeout)
-        return response
+
+        if response.status_code != 200:
+            raise RuntimeError(f"API error {response.status_code} while callign {url}")
+
+        return response.json()
