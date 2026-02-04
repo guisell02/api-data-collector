@@ -34,6 +34,7 @@ black
 pytest
 
 Project Structure
+```text
 api-data-collector/
 ├── src/
 │   └── api_data_collector/
@@ -59,6 +60,8 @@ api-data-collector/
 ├── pyproject.toml
 ├── README.md
 └── .gitignore
+
+```
 
 How to Run
 
