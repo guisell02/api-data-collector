@@ -1,6 +1,6 @@
 "First test: Remove prefix"
 
-from api_data_collector.collector.config.url_normalization import (
+from api_data_collector.collector.utils.url_normalization import (
     remove_prefix,
     clean_end,
     add_protocol,
