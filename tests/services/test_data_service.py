@@ -1,6 +1,7 @@
 import pytest
 from api_data_collector.collector.services.data_service import DataService
 
+
 class FakeApiClient:
     def get_json(self, endpoint: str):
         return [
@@ -8,6 +9,7 @@ class FakeApiClient:
             {"userId": 2, "title": "World"},
             {"userId": 1, "title": "Python"},
         ]
+
 
 def test_get_post_titles_by_user_returns_titles():
     """Returns the post titles that correspond to the given user_id."""

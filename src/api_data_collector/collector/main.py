@@ -6,9 +6,7 @@ from api_data_collector.collector.config.settings import BASE_URL, DEFAULT_TIMEO
 
 
 def main() -> None:
-    api_client = ApiClient(
-     BASE_URL, DEFAULT_TIMEOUT
-    )
+    api_client = ApiClient(BASE_URL, DEFAULT_TIMEOUT)
 
     service = DataService(api_client)
 
