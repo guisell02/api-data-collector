@@ -1,149 +1,109 @@
-API Data Collector
-Description
+# API Data Collector: clima histórico de Pasto
 
-API Data Collector is a modular Python project designed to consume and process REST APIs, with a strong focus on clean architecture, PEP 8 compliance, and modern Python development practices.
+Recolector de datos meteorológicos históricos de Pasto, Nariño. Consulta la API de Open-Meteo, organiza los datos diarios y genera archivos CSV para su análisis.
 
-This project is intended as a learning-oriented implementation that demonstrates how to structure a real-world Python application, separate responsibilities, and write testable, maintainable code when working with external APIs.
+## Pregunta del proyecto
 
-Objectives
+¿Cómo variaron la temperatura media y la precipitación acumulada por mes en Pasto entre 2016 y 2025?
 
-The main goals of this project are:
+## Estado
 
-Apply a clean and modular project structure
+El proyecto recolecta datos meteorológicos históricos de Pasto, genera archivos CSV y presenta un análisis exploratorio en un notebook con visualizaciones e interpretación.
 
-Consume REST APIs using the requests library
+La suite actual contiene siete pruebas para el cliente HTTP, el servicio meteorológico y las funciones de agregación.
 
-Separate concerns between HTTP clients, business logic, and utilities
+## Fuente y limitaciones
 
-Practice modern Python tooling and workflows
+Los datos provienen de la [Historical Weather API de Open-Meteo](https://open-meteo.com/en/docs/historical-weather-api), con el modelo ERA5.
+ERA5 es un reanálisis meteorológico: combina observaciones con modelos para estimar condiciones pasadas. Su resolución es de aproximadamente 0,25 grados (unos 25 km). Por eso, los datos describen la celda de grilla reportada por la API, no una medición directa de una estación meteorológica en el centro de Pasto.
+La consulta solicita las coordenadas `1.214578, -77.278117`; Open-Meteo reportó la celda `1.25, -77.25`. La zona horaria solicitada es `America/Bogota`.
+Los resultados sirven para describir el periodo analizado. No constituyen una normal climática oficial de 30 años ni demuestran por sí solos las causas de cambios climáticos.
 
-Write unit tests for core business logic
+## Datos recolectados
 
-Technologies Used
+- Periodo: `2016-01-01` a `2025-12-31`.
+- Variables diarias:
+  - Temperatura media a 2 metros, en °C.
+  - Precipitación acumulada diaria, en mm.
+- Ubicación y periodo centralizados en `src/api_data_collector/collector/config/settings.py`.
 
-Python 3.13+
+## Instalación y ejecución
 
-requests
+Requiere Python 3.13 o superior y `uv`.
 
-uv
-
-ruff
-
-black
-
-pytest
-
-Project Structure
-```text
-api-data-collector/
-├── src/
-│   └── api_data_collector/
-│       └── collector/
-│           ├── main.py
-│           ├── clients/
-│           │   └── api_client.py
-│           ├── config/
-│           │   └── settings.py
-│           ├── services/
-│           │   └── data_service.py
-│               ├── filters.py
-│           ├── storage/
-│           │   └── file_storage.py
-│           └── utils/
-│               ├── formatters.py
-│               ├── logger.py
-│               └── url_normalization.py
-├── tests/
-│   ├── clients/
-│   ├── services/
-│   └── utils/
-├── pyproject.toml
-├── README.md
-└── .gitignore
+```powershell
+uv sync
+uv run python -m api_data_collector.collector.main
 
 ```
 
-How to Run
+La ejecución consulta Open-Meteo y genera estos archivos en `data/`:
 
-Install dependencies and set up the environment:
+- `pasto_daily_weather.csv`
+- `pasto_monthly_weather_summary.csv`
+- `pasto_monthly_climatology_2016_2025.csv`
 
-uv sync
+La carpeta `data/` está excluida de Git; los archivos generados localmente no se suben al repositorio por defecto.
 
+## Contenido de los CSV
 
-Run development tools:
+### Datos diarios
 
-uv run ruff check .
-uv run black .
-uv run pytest
+| Columna | Descripción |
+|---|---|
+| `date` | Fecha local del registro |
+| `temperature_2m_mean_c` | Temperatura media diaria en °C |
+| `precipitation_sum_mm` | Precipitación diaria acumulada en mm |
 
-Architecture Overview
+### Resumen por año y mes
 
-This project follows a clear separation of responsibilities, inspired by clean architecture principles.
+| Columna | Descripción |
+|---|---|
+| `year` | Año |
+| `month` | Número del mes |
+| `temperature_mean_c` | Promedio de las temperaturas diarias disponibles |
+| `precipitation_sum_mm` | Suma de la precipitación diaria disponible |
+| `temperature_days` | Días con dato de temperatura |
+| `precipitation_days` | Días con dato de precipitación |
 
-ApiClient
+Los días sin datos se excluyen del cálculo y se reflejan en las columnas de cobertura.
 
-The api_client module is responsible for all HTTP communication with external REST APIs.
+### Climatología mensual 2016–2025
 
-The ApiClient class:
+| Columna | Descripción |
+|---|---|
+| `month` | Número del mes |
+| `temperature_climatology_mean_c` | Promedio de las temperaturas medias de ese mes entre los años disponibles |
+| `precipitation_climatology_mean_mm` | Promedio de los totales de precipitación de ese mes entre los años disponibles |
+| `temperature_years` | Cantidad de años incluidos en el promedio de temperatura |
+| `precipitation_years` | Cantidad de años incluidos en el promedio de precipitación |
 
-Is initialized with configuration values such as base URL and timeout
+Cada fila representa un mes calendario. En este periodo, cada promedio incluye diez años.
 
-Uses the requests library to fetch data in JSON format
+## Análisis exploratorio
 
-Exposes a get_json method that returns parsed JSON responses
+El notebook [`pasto_weather_analysis.ipynb`](notebooks/pasto_weather_analysis.ipynb) revisa la calidad de los datos, compara los promedios mensuales de temperatura y precipitación, y visualiza las diferencias entre años mediante mapas de calor.
 
-Raises a RuntimeError when a request fails
+Para reproducirlo, ejecuta primero el recolector para generar los CSV en `data/`. Después abre el notebook en VS Code, selecciona el kernel del entorno del proyecto y ejecuta todas las celdas.
 
-This module isolates all networking concerns from the rest of the application.
+## Pruebas
 
-DataService
+Ejecuta las pruebas con:
 
-The data_service module contains the business logic of the application.
+```powershell
+uv run python -m pytest
+```
 
-The DataService class:
+## Estructura principal
 
-Depends on an ApiClient instance
+```text
+src/api_data_collector/collector/
+├── clients/       # Comunicación HTTP con la API
+├── config/        # Ubicación, periodo y parámetros
+├── services/      # Consulta y agregación de datos
+├── storage/       # Escritura de archivos CSV
+└── main.py        # Orquestación de la ejecución
+```
 
-Coordinates API calls
-
-Processes raw API data into meaningful results
-
-Delegates filtering logic to utility functions
-
-For example, it can retrieve posts from an API and return a list of post titles that belong to a specific user.
-
-Filters (Utilities)
-
-Filtering logic is implemented as pure utility functions.
-
-These functions:
-
-Receive raw data structures (lists of dictionaries)
-
-Apply domain-specific rules, such as filtering posts by user_id
-
-Return simplified, human-readable results
-
-If no data matches the filtering criteria, a ValueError is raised.
-
-This design keeps the business logic testable and easy to extend.
-
-URL Normalization Utilities
-
-The project includes a utility module dedicated to URL normalization.
-
-This module provides helper functions to:
-
-Remove existing protocols (http://, https://)
-
-Clean trailing slashes from URLs
-
-Rebuild normalized URLs with a consistent protocol
-
-Although this module is not yet integrated into the main execution flow, it represents a preparatory step for validating and sanitizing user-provided URLs before making HTTP requests.
-
-Project Status
-
-This project represents a foundational implementation focused on architecture, code quality, and testing.
-
-It is intentionally scoped to demonstrate core concepts rather than feature completeness and serves as a reference project for junior developers learning how to build clean and maintainable Python applications.
+## Evidencia de ejecución
+La ejecución generó 3.653 registros diarios, 120 resúmenes año-mes y 12 promedios mensuales. Cada promedio mensual cuenta con datos de los diez años. La respuesta reportó temperatura en °C y precipitación en mm.
